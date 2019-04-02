@@ -24,8 +24,15 @@ namespace MultiplicacionMatrices {
             showMsg ("\nMatriz 2");
             Matrix b = new Matrix ();
             b.initialize ();
-            b.load();
+            b.load ();
             b.show ();
+
+            showMsg ("\nResultado de Multiplicación");
+            Matrix r = a.multiply (b);
+            if (r != null)
+                r.show ();
+            else
+                showMsg ("Las matrices ingresadas no se pueden multiplicar");
         }
     }
 
@@ -39,8 +46,13 @@ namespace MultiplicacionMatrices {
 
         }
 
-        public void initialize () {
+        private Matrix (int width, int heigth) {
+            this.width = width;
+            this.heigth = heigth;
+            this.m = new int[heigth, width];
+        }
 
+        public void initialize () {
             Console.WriteLine ("Indique el tamaño de la matriz");
             int width = getInt ("Ancho: ");
             int heigth = getInt ("Alto: ");
@@ -51,8 +63,23 @@ namespace MultiplicacionMatrices {
             }
         }
 
-        public bool isMultipliable () {
-            return false;
+        public Matrix multiply (Matrix other) {
+            if (this.isMultipliable (other)) {
+                Matrix result = new Matrix (this.heigth, other.width);
+                for (int i = 0; i < heigth; i++) {
+                    for (int j = 0; j < other.width; j++) {
+                        for (int k = 0; k < width; k++) {
+                            result.m[i,j] = result.m[i,j] + m[i,k] * other.m[k,j];
+                        }
+                    }
+                }
+                return result;
+            }
+            return null;
+        }
+
+        public bool isMultipliable (Matrix other) {
+            return this.width == other.heigth;
         }
 
         public void show () {
@@ -68,7 +95,7 @@ namespace MultiplicacionMatrices {
             Console.WriteLine ("Cargando Matriz:\n");
             for (int i = 0; i < heigth; i++) {
                 for (int j = 0; j < width; j++) {
-                    m[i, j] = getInt ("{" + (i+1) + " ; " + (j+1) + "} = ");
+                    m[i, j] = getInt ("{" + (i + 1) + " ; " + (j + 1) + "} = ");
                 }
                 Console.WriteLine ();
             }
