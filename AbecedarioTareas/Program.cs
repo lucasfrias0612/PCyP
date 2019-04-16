@@ -13,13 +13,12 @@ namespace AbecedarioTareas {
         override
         public void run () {
             Dictionary<char, string> alphabet = new Dictionary<char, string> ();
-            int index = 0;
-            const int indexLimit = 26;
-            const int startChar = 65;
+            int index = 65;
+            const int indexLimit = 91;
             Task t1 = new Task (() => {
                 while (index < indexLimit) {
                     if (isPar (index)) {
-                        alphabet.Add ((char) (index + startChar), "Tarea 1");
+                        alphabet.Add ((char) (index), "Tarea 1");
                         index++;
                     }
                 }
@@ -28,7 +27,7 @@ namespace AbecedarioTareas {
             Task t2 = new Task (() => {
                 while (index < indexLimit) {
                     if (!isPar (index)) {
-                        alphabet.Add ((char) (index + startChar), "Tarea 2");
+                        alphabet.Add ((char) (index), "Tarea 2");
                         index++;
                     }
                 }
