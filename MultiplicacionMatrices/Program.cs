@@ -1,111 +1,103 @@
 ﻿using System;
-using LucasLib;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MultiplicacionMatrices {
+    class Program {
+        static void Main (string[] args) {
 
-    class Program : ConsoleProgram {
+            Matrix m1 = new Matrix (1000, 500);
+            m1.loadRandomly ();
+            Matrix m2 = new Matrix (500, 1000);
+            m2.loadRandomly ();
 
-        public static void Main () {
-            Program program = new Program ();
-            program.run ();
-            program.pause ();
-        }
+            if (m1.isMultipliable (m2)) //Si el numero de columnas de la 1 es igual al numero de filas de la 2
+            {
+                Stopwatch sw = new Stopwatch ();
+                sw.Start ();
+                Matrix res1 = m1.multiplySequentially (m2);
+                sw.Stop ();
+                Console.WriteLine ("El programa demoró " + (sw.ElapsedMilliseconds) + " miliseg. Secuencialmente");
+                sw = new Stopwatch ();
+                sw.Start ();
+                Matrix res2 = m1.multiplyInParalell (m2);
+                sw.Stop ();
+                Console.WriteLine ("El programa demoró " + (sw.ElapsedMilliseconds) + " miliseg. en Parallelo");
 
-        override
-        public void run () {
-            showMsg ("\tMultiplicador de Matrices\n");
-
-            showMsg ("Matriz 1");
-            Matrix a = new Matrix ();
-            a.initialize ();
-            a.load ();
-            a.show ();
-
-            showMsg ("\nMatriz 2");
-            Matrix b = new Matrix ();
-            b.initialize ();
-            b.load ();
-            b.show ();
-
-            showMsg ("\nResultado de Multiplicación");
-            Matrix r = a.multiply (b);
-            if (r != null)
-                r.show ();
-            else
-                showMsg ("Las matrices ingresadas no se pueden multiplicar");
+                // Console.WriteLine ("LA RESPUESTA ES: ");
+                // res.show ();
+            } else {
+                Console.WriteLine ("No se puede multiplicar estas matrices");
+                Console.Read ();
+            }
         }
     }
 
-    class Matrix {
-
-        private int width;
-        private int heigth;
+    public class Matrix {
         private int[, ] m;
+        private int c;
+        private int r;
 
-        public Matrix () {
-
+        public Matrix (int r, int c) {
+            this.m = new int[r, c];
+            this.r = r;
+            this.c = c;
         }
 
-        private Matrix (int width, int heigth) {
-            this.width = width;
-            this.heigth = heigth;
-            this.m = new int[heigth, width];
-        }
-
-        public void initialize () {
-            Console.WriteLine ("Indique el tamaño de la matriz");
-            int width = getInt ("Ancho: ");
-            int heigth = getInt ("Alto: ");
-            if (width != 0 && heigth != 0) {
-                this.width = width;
-                this.heigth = heigth;
-                this.m = new int[heigth, width];
-            }
-        }
-
-        public Matrix multiply (Matrix other) {
-            if (this.isMultipliable (other)) {
-                Matrix result = new Matrix (this.heigth, other.width);
-                for (int i = 0; i < heigth; i++) {
-                    for (int j = 0; j < other.width; j++) {
-                        for (int k = 0; k < width; k++) {
-                            result.m[i,j] = result.m[i,j] + m[i,k] * other.m[k,j];
-                        }
-                    }
+        public void loadRandomly () {
+            Random random = new Random ();
+            for (int r = 0; r < this.r; r++) {
+                for (int c = 0; c < this.c; c++) {
+                    this.m[r, c] = random.Next (1, 100);;
                 }
-                return result;
             }
-            return null;
         }
 
         public bool isMultipliable (Matrix other) {
-            return this.width == other.heigth;
+            return this.c == other.r;
         }
 
         public void show () {
-            for (int i = 0; i < heigth; i++) {
-                for (int j = 0; j < width; j++) {
-                    Console.Write (m[i, j] + "\t");
+            string igual = "";
+            for (int i = 0; i < this.r; i++) {
+                for (int j = 0; j < this.c; j++) {
+                    igual = igual + (this.m[i, j].ToString ()) + " ";
                 }
-                Console.WriteLine ();
+                Console.WriteLine ("[ " + igual + "]");
+                igual = "";
             }
         }
-
-        public void load () {
-            Console.WriteLine ("Cargando Matriz:\n");
-            for (int i = 0; i < heigth; i++) {
-                for (int j = 0; j < width; j++) {
-                    m[i, j] = getInt ("{" + (i + 1) + " ; " + (j + 1) + "} = ");
+        public Matrix multiplyInParalell (Matrix other) {
+            Matrix matrixResponse = new Matrix (this.r, other.c);
+            int temp = 0;
+            Parallel.For (0, this.r, i => {
+                for (int j = 0; j < other.c; j++) {
+                    for (int k = 0; k < this.c; k++) {
+                        temp += this.m[i, k] * other.m[k, j];
+                    }
+                    matrixResponse.m[i, j] = temp;
+                    temp = 0;
                 }
-                Console.WriteLine ();
-            }
+            }); // Parallel.For
+            return matrixResponse;
         }
 
-        private int getInt (string msg) {
-            Console.Write (msg);
-            int result;
-            int.TryParse (Console.ReadLine (), out result);
-            return result;
+        public Matrix multiplySequentially (Matrix other) {
+            Matrix matrixResponse = new Matrix (this.r, other.c);
+            int temp = 0;
+            for (int i = 0; i < this.r; i++) {
+                for (int j = 0; j < other.c; j++) {
+                    for (int k = 0; k < this.c; k++) {
+                        temp += this.m[i, k] * other.m[k, j];
+                    }
+                    matrixResponse.m[i, j] = temp;
+                    temp = 0;
+                }
+            }
+            return matrixResponse;
         }
     }
 }
