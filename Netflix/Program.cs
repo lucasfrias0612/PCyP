@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq; // Para el OrderByDescending method
+using System.Diagnostics;
+using System.Threading.Tasks;
 using LucasLib;
 
 namespace Netflix {
@@ -13,29 +15,45 @@ namespace Netflix {
         }
         override
         public void run () {
+            Stopwatch s = new Stopwatch ();
+            s.Start ();
             QualificationRatingData data = new QualificationRatingData ();
 
             showMsg ("Diccionario:\n");
             foreach (var item in data.getUserQualifications ().OrderByDescending (pair => pair.Value).Take (10)) {
                 showMsg ("User {" + item.Key + "} Qualifications {" + item.Value + "}");
             }
+            s.Stop ();
+            showMsg ("Tiempo de ejecución: " + s.ElapsedMilliseconds + " miliseg.");
         }
     }
 
     class QualificationRatingData {
-        private static readonly string DEFAULT_PATH = "res/ratings.txt";
+        private static readonly string DEFAULT_PATH = "ratings.txt";
         private Dictionary<int, int> userQualifications;
         public QualificationRatingData () {
             StreamReader objReader = new StreamReader (DEFAULT_PATH);
             string s = objReader.ReadLine ();
-            if (s != null) {
-                userQualifications = new Dictionary<int, int> ();
-                while (s != null) {
-                    Qualification qualification = new Qualification (s);
-                    addUserQualification (qualification.getUserId ());
-                    s = objReader.ReadLine ();
-                }
+            List<string> lines= new List<string>();
+            while (s!=null){
+                lines.Add(s);
+                s = objReader.ReadLine ();
             }
+            userQualifications = new Dictionary<int, int> ();
+            Parallel.ForEach (
+                lines, //Datasource
+                () => 0, //Initilizer
+                (line, loopState, subtotal) => //Task body
+                {
+                    Qualification qualification = new Qualification (line);
+                    addUserQualification (qualification.getUserId ());
+                    return subtotal.Remove((string)line);
+                },
+                (subtotal) => //Finalizer
+                {
+                    //Interlocked.Add (ref count, subtotal);
+                }
+            );
             objReader.Close ();
         }
 
